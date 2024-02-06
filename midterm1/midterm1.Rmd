@@ -1,0 +1,158 @@
+---
+title: "Midterm 1 W24"
+author: "Valerie Whitfield"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Instructions
+Answer the following questions and complete the exercises in RMarkdown. Please embed all of your code and push your final work to your repository. Your code must be organized, clean, and run free from errors. Remember, you must remove the `#` for any included code chunks to run. Be sure to add your name to the author header above. 
+
+Your code must knit in order to be considered. If you are stuck and cannot answer a question, then comment out your code and knit the document. You may use your notes, labs, and homework to help you complete this exam. Do not use any other resources- including AI assistance.  
+
+Don't forget to answer any questions that are asked in the prompt!  
+
+Be sure to push your completed midterm to your repository. This exam is worth 30 points.  
+
+## Background
+In the data folder, you will find data related to a study on wolf mortality collected by the National Park Service. You should start by reading the `README_NPSwolfdata.pdf` file. This will provide an abstract of the study and an explanation of variables.  
+
+The data are from: Cassidy, Kira et al. (2022). Gray wolf packs and human-caused wolf mortality. [Dryad](https://doi.org/10.5061/dryad.mkkwh713f). 
+
+## Load the libraries
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("janitor")
+```
+
+## Load the wolves data
+In these data, the authors used `NULL` to represent missing values. I am correcting this for you below and using `janitor` to clean the column names.
+```{r message=FALSE, warning=FALSE}
+wolves <- read.csv("data/NPS_wolfmortalitydata.csv", na = c("NULL")) %>% clean_names()
+```
+
+## Questions
+Problem 1. (1 point) Let's start with some data exploration. What are the variable (column) names?  
+
+```{r}
+names(wolves)
+```
+
+
+Problem 2. (1 point) Use the function of your choice to summarize the data and get an idea of its structure.  
+
+```{r}
+glimpse(wolves)
+```
+
+
+Problem 3. (3 points) Which parks/ reserves are represented in the data? Don't just use the abstract, pull this information from the data. 
+
+```{r}
+unique(wolves$park)
+```
+
+The parks represented are DENA-Denali National Park and Preserve, GTNP-Grand Teton National Park, VNP-Voyageurs National Park, YNP-Yellowstone National Park, or YUCH-Yukon-Charley Rivers National Preserve.
+
+
+Problem 4. (4 points) Which park has the largest number of wolf packs?
+
+```{r}
+wolves %>% group_by(park) %>% summarize(n_distinct(pack)) 
+#Not all of these packs are still around, but I'm interpreting the question to mean "the largest number of distinct wolf packs that has existed over time, regardless of whether they all currently exist." I could filter by year if that was necessary, but that's not specified in the question. Besides, the data only goes up until 2021, so it's not current anyway, so I figure my interpretation is fine.
+```
+
+Denali has the largest number of wolf packs.
+
+Problem 5. (4 points) Which park has the highest total number of human-caused mortalities `mort_all`?
+
+```{r}
+wolves %>% group_by(park) %>% summarize(sum(mort_all))
+```
+Yukon-Charley has the highest total number of human-caused mortalities.
+
+The wolves in [Yellowstone National Park](https://www.nps.gov/yell/learn/nature/wolf-restoration.htm) are an incredible conservation success story. Let's focus our attention on this park.  
+
+Problem 6. (2 points) Create a new object "ynp" that only includes the data from Yellowstone National Park.  
+
+```{r}
+ynp <- filter(wolves, park=="YNP")
+head(ynp) #I don't want you to have to scroll for ages
+```
+
+Problem 7. (3 points) Among the Yellowstone wolf packs, the [Druid Peak Pack](https://www.pbs.org/wnet/nature/in-the-valley-of-the-wolves-the-druid-wolf-pack-story/209/) is one of most famous. What was the average pack size of this pack for the years represented in the data?
+
+```{r}
+ynp %>% 
+  filter(pack=="druid") %>%
+  group_by(pack) %>%
+  summarize(mean(packsize_aug))
+```
+
+Problem 8. (4 points) Pack dynamics can be hard to predict- even for strong packs like the Druid Peak pack. At which year did the Druid Peak pack have the largest pack size? What do you think happened in 2010?
+
+```{r}
+ynp %>% filter(pack=="druid") %>% arrange(biolyr)
+```
+
+The year with the greatest pack size was 2001, which had a pack size of 37. In 2010, the pack size went down from 12 the previous year to 0 in that year. The mortALL variable being 0 for 2009 and 2010 tells us that humans did not kill off the wolf pack. However, the reprody1 variable being 0 for 2009 tells us that no wolves reproduced in the year before 2010, and the persisty1 variable also being 0 for 2009 tells us that the pack dissolved and did not persist to the end of the year. There could be a variety of causes for them dispersing and not reproducing, from lack of food to poor conditions, but it definitely happened.
+
+Problem 9. (5 points) Among the YNP wolf packs, which one has had the highest overall persistence `persisty1` for the years represented in the data? Look this pack up online and tell me what is unique about its behavior- specifically, what prey animals does this pack specialize on?  
+
+```{r}
+ynp %>% 
+  group_by(pack) %>%
+  summarize(years_persisted=sum(persisty1, na.rm=T)) %>%
+  arrange(desc(years_persisted))
+```
+
+Mollie's Pack has the highest persistence. They've been around for 26 years! I found a couple websites on them ([1](https://www.yellowstonewolf.org/yellowstones_wolves.php?pack_id=6) [2](https://greateryellowstone.org/blog/2020/studyingwolves)) and it seems that they hunt bison! Knowing how large bison are, that's pretty impressive.
+
+Problem 10. (3 points) Perform one analysis or exploration of your choice on the `wolves` data. Your answer needs to include at least two lines of code and not be a summary function.  
+
+My question: how did human-caused mortalities influence the persistence of wolf packs?
+
+First I want to see a frequency table of persistence to the next year versus whether there was a human-caused mortality. I want to see how many times each of the four cases (both true, both false, no persistence despite no mortality, persistence despite mortality) happened.
+```{r}
+#Table showing occurrences
+wolves %>% 
+  tabyl(persisty1, mort_yn, show_na=F) %>% 
+  adorn_totals(where=c("row","col")) %>% 
+  adorn_title() #I know we didn't learn these in class but I found them though ?tabyl() not the internet and I find them very helpful here
+```
+
+Now I'll show the percentages for each occurrence so it's easier to see how often each one occurred.
+```{r}
+#Making a second table with frequency of each occurrence
+wolves %>% 
+  tabyl(persisty1, mort_yn, show_na=F) %>% 
+  adorn_totals(where=c("row","col")) %>% 
+  adorn_percentages(denominator="all") %>% 
+  adorn_pct_formatting() %>% 
+  adorn_title()
+```
+
+I'm curious to see the percentages of persistence based on whether was a human-caused mortality. This will allow me to most clearly isolate whether human-caused mortalities have an effect on persistence.
+```{r}
+#Making a third table with percentages of persistence based on whether there was a human-caused mortality
+wolves %>% 
+  tabyl(persisty1, mort_yn, show_na=F) %>% 
+  adorn_totals(where=c("col")) %>% #The row totals aren't necessary - they're just 100%
+  adorn_percentages(denominator="col") %>% #This is the key part.
+  adorn_pct_formatting() %>% 
+  adorn_title()
+```
+
+Alright, it's clear that when there's an association! The fact that wolf packs persisted 91.7% of the time when there were no mortalities and only 76.3% of the time when there were mortalities makes that obvious. I'll narrow in by investigating whether the pack was less likely to persist when a leader was killed than when only non-leaders were killed.
+```{r}
+#Table for when leaders were killed
+wolves %>% filter(mort_lead!=0) %>% tabyl(persisty1, mort_yn, show_na=F) %>% adorn_percentages(denominator="col") %>% adorn_pct_formatting() %>% adorn_title()
+```
+
+```{r}
+#Table for when only non-leaders were killed (but some wolves were killed)
+wolves %>% filter(mort_lead==0, mort_yn==1) %>% tabyl(persisty1, mort_yn, show_na=F) %>% adorn_percentages(denominator="col") %>% adorn_pct_formatting() %>% adorn_title()
+```
+WOW, ok. The pack persisted 88.5% of the time when no leaders were killed, and only 59.1% of the time when leaders were killed. That's a huge difference.
