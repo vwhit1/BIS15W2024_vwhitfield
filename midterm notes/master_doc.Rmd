@@ -1,0 +1,657 @@
+---
+title: "Master Doc"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+##Install all libraries and create all objects
+
+### Load the libraries
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("janitor")
+library("skimr")
+library("palmerpenguins")
+```
+
+###Create all dataframes
+
+```{r}
+hot_springs <- read_csv("data/hsprings_data.csv")
+fish <- read_csv("data/Gaeta_etal_CLC_data.csv")
+mammals <- read_csv("data/mammal_lifehistories_v2.csv")
+bison <- read_csv("data/bison.csv")
+superhero_info <- read_csv("data/heroes_information.csv", na = c("", "-99", "-"))
+superhero_powers <- read_csv("data/super_hero_powers.csv", na = c("", "-99", "-"))
+```
+
+
+##lab2_1
+
+#### Types of Data
+There are five frequently used `classes` of data: 1. numeric, 2. integer, 3. character, 4. logical, 5. complex.
+```{r}
+my_numeric <- 42
+my_integer <- 2L #adding an L automatically denotes an integer
+my_character <- "universe"
+my_logical <- FALSE
+my_complex <- 2+4i
+```
+
+To find out what type of data you are working with, use the `class()` function. This is important because sometimes we will need to change the type of data to perform certain analyses.
+```{r}
+class(my_numeric)
+```
+
+You can use the `is()` and `as()` functions to clarify or specify a type of data.
+```{r}
+is.integer(my_numeric) #is my_numeric an integer?
+```
+
+```{r}
+my_integer <- 
+  as.integer(my_numeric) #create a new object specified as an integer
+```
+
+```{r}
+is.integer(my_integer) #is the new my_numeric an integer?
+```
+
+#### Missing Data
+R has a special way to designate missing data, the NA. NA values in R have specific properties which are very useful if your data contains any missing values. Later this quarter we will have a session focused on dealing with NAs.  
+
+NA values are used to designate missing data. `is.na` or `anyNA` are useful functions when dealing with NAs in data. 
+```{r}
+my_missing <- NA
+```
+
+```{r}
+is.na(my_missing)
+```
+
+```{r}
+anyNA(my_missing)
+```
+
+##lab2_2
+
+#### Vectors
+Vectors are a common way of organizing data in R.  We create vectors using the `c` command. The `c` stands for concatenate.  
+
+A numeric vector.
+```{r}
+my_vector <- c(10, 20, 30)
+```
+
+A character vector. Characters always have quotes and may be referred to as "strings".
+```{r}
+days_of_the_week <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+```
+
+A convenient trick for creating a vector is to generate a sequence of numbers.
+```{r}
+my_vector_sequence <- c(1:100)
+my_vector_sequence
+```
+
+We can use `[]` to pull out elements in a vector. We just need to specify their position in the vector; i.e. day 3 is Wednesday.
+```{r}
+days_of_the_week[1]
+```
+
+#### Data Matrices
+Data matrices are a series of stacked vectors, similar to a data table. In the example below, we build a new data matrix using the matrix command.  
+
+Box office earnings for Harry Potter movies (in millions!). Notice that these are separate vectors.  
+```{r}
+Philosophers_Stone <- c(317.5, 657.1)
+Chamber_of_Secrets <- c(261.9, 616.9)
+Prisoner_of_Azkaban <- c(249.5, 547.1)
+Goblet_of_Fire <- c(290.0, 606.8)
+Order_of_the_Phoenix <- c(292.0, 647.8)
+Half_Blood_Prince <- c(301.9, 632.4)
+Deathly_Hallows_1 <- c(295.9, 664.3)
+Deathly_Hallows_2 <- c(381.0, 960.5)
+```
+
+Create a new object called `box_office`. Here we are using the `c` command to combine the vectors into one.
+```{r}
+box_office <- c(Philosophers_Stone, Chamber_of_Secrets, Prisoner_of_Azkaban, Goblet_of_Fire, Order_of_the_Phoenix, Half_Blood_Prince, Deathly_Hallows_1, Deathly_Hallows_2)
+box_office
+```
+
+Create `harry_potter_matrix` using the `matrix()` command. We need to tell R how to organize the `box_office` vector using the `nrow` and `byrow` commands.
+```{r}
+harry_potter_matrix <- matrix(box_office, nrow = 8, byrow = T)
+harry_potter_matrix
+```
+
+#### Name the rows and columns
+
+Vectors `region` and `titles`, used for naming.
+```{r}
+region <- c("US", "non-US")
+region
+```
+
+```{r}
+titles <- c("Philosophers_Stone", "Chamber_of_Secrets", "Prisoner_of_Azkaban", "Goblet_of_Fire", "Order_of_the_Phoenix", "Half_Blood_Prince", "Deathly_Hallows_1", "Deathly_Hallows_2")
+titles
+```
+
+Name the columns using `colnames()` with the vector region.
+```{r}
+colnames(harry_potter_matrix) <- region
+```
+Name the rows using `rownames()` with the vector titles.
+```{r}
+rownames(harry_potter_matrix) <- titles
+```
+
+Print `harry_potter_matrix`.
+```{r}
+harry_potter_matrix
+```
+
+#### Using a data matrix
+Once you have a data matrix, you can perform lots of different analyses. For example, you can calculate the total earnings of each movie.
+```{r}
+global <- rowSums(harry_potter_matrix)
+global
+```
+
+And even add a new column to reflect this calculation. `cbind()` adds columns.
+```{r}
+all_harry_potter_matrix <- cbind(harry_potter_matrix, global)
+all_harry_potter_matrix
+```
+
+#### Practice
+1. What are the total earnings for the US and non-US regions?  
+
+2. Add this information to the data matrix. Hint: you are adding a row, not a column.  
+
+
+```{r}
+total_earnings <- colSums(all_harry_potter_matrix)
+total_harry_potter_matrix <- rbind(all_harry_potter_matrix, total_earnings)
+total_harry_potter_matrix
+```
+
+#### A few Extras
+The same methods of selecting elements in a vector apply to data matrices. We use `[]`. The following selects the value in the first column, second row.
+```{r}
+harry_potter_matrix[2,1]
+```
+
+Adding a colon `:` selects the specified elements in a column.  
+```{r}
+harry_potter_matrix[1:4] #inclusive of both the first element and last element listed
+```
+
+We can also select values in an entire row or column. This can be useful for calculations. Here we calculate the mean of the entire second column. 
+```{r}
+non_us_earnings <- all_harry_potter_matrix[ ,2]
+mean(non_us_earnings)
+```
+
+
+##lab3_1
+
+
+### Warm-up
+
+```{r}
+plant_heights <- c(30.7, 37.6, 28.4, NA, 33.2) #Step 1: plant height vector
+plant_mass <- c(4, 5.2, 3.7, NA, 4.6) #Step 2: plant mass vector
+plant_matrix <- matrix(data = c(plant_heights, plant_mass), nrow=5) #Step 3: Create matrix
+plant_matrix <- rbind(plant_matrix, colMeans(plant_matrix, na.rm = T)) #Step 4: Add "Mean" row
+rownames(plant_matrix) <- c("Plant 1", "Plant 2", "Plant 3", "Plant 4", "Plant 5", "Mean") # Step 5: Name rows and columns
+colnames(plant_matrix) <- c("Height", "Mass")
+plant_matrix #Step 6: Print final matrix
+```
+
+
+### Data Frames
+During lab 2, you learned how to work with vectors and data matrices. Today we will organize the vectors into a new type of data structure called a **data frame**. The data frame is the most common way to organize data within R. You can think of a data frame as similar to a spreadsheet. A data frame can store data of many different classes.  
+
+Let's build separate vectors that include length (in), weight (oz), and sex of three [ruby-throated hummingbirds](https://www.audubon.org/field-guide/bird/ruby-throated-hummingbird).  
+```{r}
+Sex <- c("male", "female", "male")
+Length <- c(3.2, 3.7, 3.4)
+Weight <- c(2.9, 4.0, 3.1)
+```
+
+Here we combine our three vectors to create a data frame with the function `data.frame()`.
+```{r}
+hbirds <- data.frame(Sex, Length, Weight)
+hbirds
+```
+
+OK, stop and think- how does this differ from making a data matrix? Are the data treated differently?  
+```{r}
+hummingbirds <- c(Sex, Length, Weight)
+hummingbirds_matrix <- matrix(hummingbirds, ncol=3, byrow = F)
+hummingbirds_matrix
+```
+
+Notice that not only are the data neat and clean looking, there is also information provided about the class of data. `dbl` means that the value is a type of numeric [double precision floating point](http://uc-r.github.io/integer_double/). 
+
+What are the column names of our data frame? Notice that R defaulted to using the names of our vectors, but we could name them something else when creating the data frame, or rename them later.
+```{r}
+names(hbirds)
+```
+
+What are the dimensions of the `hbirds` data frame? The `dim()` and `str()` commands provide this information.   
+```{r}
+dim(hbirds) #note: a column is a variable, each observation goes in a cell
+```
+
+```{r}
+str(hbirds)
+```
+
+Let's use lowercase names when we create the data frame. We just changed to lowercase here, but we could use any names we wish.  
+```{r}
+hbirds <- data.frame(sex=Sex, length=Length, weight_g=Weight)
+hbirds
+```
+
+```{r}
+
+```
+
+### Accessing Data Frame Columns and Rows 
+The same methods of selecting elements in vectors and data matrices apply to data frames. We use `[]`. We have two positions where the first applies to the rows, and the second to the columns.  
+
+The first row.  
+```{r}
+hbirds[1,]
+```
+
+The third column.  
+```{r}
+hbirds[ ,3]
+```
+
+We can also select values in an entire column using the `$` sign. This can be useful for calculations. Here we calculate the mean of all of the birds weights. 
+```{r}
+w <- hbirds$weight_g
+mean(w)
+```
+
+### Adding Rows
+We can add a new bird's data with the `rbind()` function, known as row bind. It will bind our new vector to our data frame row-wise.
+```{r}
+new_bird <- c("female", 3.6, 3.9)
+new_bird
+```
+
+```{r}
+hbirds<- rbind(hbirds, new_bird)
+hbirds
+```
+
+### Adding Columns
+What if we come across more data and we want to add it to our data frame? We can also do that with the `$` operator.
+```{r}
+hbirds$neighborhood <- c("lakewood", "brentwood", "lakewood", "scenic Heights")
+hbirds
+```
+
+### Writing Data to File
+We should save our hbirds data frame so we can use it again later! There are many ways to save data in R, here we write our data frame to a csv file. We use `row.names = FALSE` to avoid row numbers from printing out. 
+```{r}
+write.csv(hbirds, "hbirds_data.csv", row.names = FALSE)
+```
+
+### Practice
+Below are data collected by three scientists (Jill, Steve, Susan in order) measuring temperatures of three hot springs near Mono Lake.
+```{r}
+temp <- c(36.25, 35.40, 35.30, 35.15, 35.35, 33.35, 30.70, 29.65, 29.20)
+name <- c("Jill", "Susan", "Steve", "Jill", "Susan", "Steve", "Jill", "Susan", "Steve")
+spring <- c("Buckeye", "Buckeye", "Buckeye", "Benton", "Benton", "Benton", "Travertine", "Travertine", "Travertine")
+```
+
+1. Build a data frame called `hsprings` with the above data. Name the temperature column `temp_C`. Print out the data frame.  
+```{r}
+hsprings <- data.frame(temp_C=temp, name, spring)
+hsprings
+```
+
+2. Change the column titled `name` to `scientist`, leave the other column names the same. Print out the data frame names.  
+```{r}
+colnames(hsprings)[2] <- "scientist"
+colnames(hsprings)
+```
+
+3. Our scientists forgot to record the depth data for each spring. Here it is as a vector, add it as a new column called depth_ft: `c(4.15, 4.13, 4.12, 3.21, 3.23, 3.20, 5.67, 5.65, 5.66)`. Print out the data frame.
+
+```{r}
+depth_ft <- c(4.15, 4.13, 4.12, 3.21, 3.23, 3.20, 5.67, 5.65, 5.66)
+hsprings <- cbind(hsprings, depth_ft)
+hsprings
+```
+
+4. Calculate the mean temperature of all of the temperature measurements.
+```{r}
+mean(hsprings$temp_C)
+```
+
+5. Save your hot springs data as a `.csv` file! Do not allow row names. 
+```{r}
+write.csv(hsprings, "hsprings_data.csv", row.names = F)
+```
+
+##lab3_2
+
+str() for structure, class() for class, levels() for levels of a factor
+
+summary() glimpse() nrow()/ncol() dim() names()
+which(is.na(sleep)) lets you determine NAs in the data, anyNA(mammals) works too
+
+##lab4_1
+
+select() is columns, filter() is rows
+
+Options to select columns based on a specific criteria include:  
+1. ends_with() = Select columns that end with a character string  
+2. contains() = Select columns that contain a character string  
+3. matches() = Select columns that match a regular expression  
+4. one_of() = Select columns names that are from a group of names 
+
+We won't cover regular expressions [regex](https://en.wikipedia.org/wiki/Regular_expression) in this class, but the following code is helpful when you know that a column contains a letter (in this case "a") followed by a subsequent string (in this case "er").  
+```{r}
+select(fish, matches("a.+er")) #interesting!
+```
+
+Select by class: select_if(fish, is.numeric) or select_if(fish, ~!is.numeric(.))
+
+Select all but a few: select(mammals_new, -"order", -"family")
+
+select_all(mammals, tolower)
+clean_names(mammals) is better than select_all(mammals, ~str_replace(., " ", "_"))
+
+##lab4_2
+
+### Learning Goals  
+*At the end of this exercise, you will be able to:*    
+1. Use the functions of dplyr (filter, select, arrange) to organize and sort data frames.  
+2. Use `mutate()` to calculate a new column from existing columns. 
+
+Filter rules:  
++ `filter(condition1, condition2)` will return rows where both conditions are met.  
++ `filter(condition1, !condition2)` will return all rows where condition one is true but condition 2 is not.  
++ `filter(condition1 | condition2)` will return rows where condition 1 or condition 2 is met.  
++ `filter(xor(condition1, condition2)` will return all rows where only one of the conditions is met, and not when both conditions are met.  
+
+homerange$taxon <- as.factor(homerange$taxon)
+levels(homerange$taxon)
+table(homerange$trophic.guild)
+
+##lab5_2
+
+### Learning Goals
+*At the end of this exercise, you will be able to:*    
+1. Use pipes to connect functions in dplyr.  
+2. Use `arrange()` to order dplyr outputs.  
+3. Use `mutate()` to add columns in a dataframe.  
+4. Use `mutate()` and `if_else()` to replace values in a dataframe. 
+
+arrange() is ascending order by default
+
+Mutate syntax:
+fish %>% 
+  mutate(length_mm = length*10) %>% 
+  select(fish_id, length, length_mm)
+
+mammals %>% 
+  mutate(across(c("order", "family"), tolower))
+
+mammals %>% 
+  select(genus, species, newborn) %>%
+  mutate(newborn_new = ifelse(newborn == -999.00, NA, newborn))%>% 
+  arrange(newborn)
+
+##lab6_2
+
+### Learning Goals  
+*At the end of this exercise, you will be able to:*    
+1. Develop your dplyr superpowers so you can easily and confidently manipulate dataframes.  
+2. Learn helpful new functions that are part of the `janitor` package. 
+3. tabyl()
+
+superhero_info_hwadd <- superhero_info %>% mutate(height_weight_ratio = height/weight)
+superhero_info_hwadd
+superhero_info_hwadd[which.max(superhero_info_hwadd$height_weight_ratio), 1] #the 1 fetches the entry in the name column
+
+##lab7_1
+
+### Learning Goals
+*At the end of this exercise, you will be able to:*    
+1. Use a combination of `select()`, `filter()`, and `mutate()` to transform data frames.  
+2. Use the `skimr` package to produce summaries of data.  
+3. Produce clean summaries of data using `summarize()`.  
+4. Use `group_by()` in combination with `summarize()` to produce grouped summaries of data. 
+
+```
+
+Let's do a bit more practice to make sure that we understand `select()`, `filter()`, and `mutate()`. Start by building a new data frame `msleep24` from the `msleep` data that: contains the `name` and `vore` variables along with a new column called `sleep_total_24` which is the amount of time a species sleeps expressed as a proportion of a 24-hour day. Restrict the `sleep_total_24` values to less than or equal to 0.3. Arrange the output in descending order.  
+```{r}
+msleep24 <- msleep %>% 
+  mutate(sleep_total_24 = sleep_total/24) %>% 
+  select(name, vore, sleep_total_24, sleep_total) %>% 
+  filter(sleep_total_24 <= 0.3) %>% 
+  arrange(desc(sleep_total_24))
+msleep24
+```
+
+Did `dplyr` do what we expected? How do we check our output? Remember, just because your code runs it doesn't mean that it did what you intended.
+```{r}
+
+```
+
+Try out the new function `skim()` as part of the `skimr` package.
+```{r}
+skim(msleep24)
+```
+
+Histograms are also a quick way to check the output.
+```{r}
+hist(msleep24$sleep_total_24)
+```
+
+### `summarize()`
+`summarize()` will produce summary statistics for a given variable in a data frame. For example, if you are asked to calculate the mean of `sleep_total` for large and small mammals you could do this using a combination of commands, but it isn't very efficient or clean. We can do better!  
+
+We can accomplish the same task using the `summarize()` function to make things cleaner.
+```{r}
+msleep %>% 
+  filter(bodywt>200) %>% 
+  summarize(mean_sleep_lg=mean(sleep_total))
+```
+
+1. What is the mean, min, and max `bodywt` for the taxonomic order Primates? Provide the total number of observations.
+```{r}
+msleep %>% 
+  filter(order=="Primates") %>% 
+  summarize(mean_bodywt_primates=mean(bodywt),
+            min_bodywt_primates=min(bodywt),
+            max_bodywt_primates=max(bodywt),
+            total=n())
+```
+
+n_distinct() is a very handy way of cleanly presenting the number of distinct observations. Here we show the number of distinct genera over 100 in body weight.
+```{r}
+msleep %>% 
+  summarize(n_genera=n_distinct(genus)) #this counts the number of genera in msleep
+```
+
+There are many other useful summary statistics, depending on your needs: sd(), min(), max(), median(), sum(), n() (returns the length of a column), first() (returns first value in a column), last() (returns last value in a column) and n_distinct() (number of distinct values in a column).
+
+### `group_by()`
+The `summarize()` function is most useful when used in conjunction with `group_by()`. Although producing a summary of body weight for all of the mammals in the data set is helpful, what if we were interested in body weight by feeding ecology?
+```{r}
+msleep %>%
+  group_by(vore) %>% #we are grouping by feeding ecology, a categorical variable
+  summarize(min_bodywt = min(bodywt),
+            max_bodywt = max(bodywt),
+            mean_bodywt = mean(bodywt),
+            total=n())
+```
+
+### Practice
+
+1. Calculate mean brain weight by taxonomic order in the msleep data.
+```{r}
+msleep %>% 
+  group_by(order) %>% 
+  summarize(mean_brainwt = mean(brainwt)) #Uh oh! All of the orders with any NAs, the mean becomes NA
+```
+
+2. What does `NA` mean? How are NA's being treated by the summarize function?
+'NA' means "not available." Every time there's even one NA in the data set, the whole mean becomes NA. 
+
+3. Try running the code again, but this time add `na.rm=TRUE`. What is the problem with Cetacea? Compare this to Carnivora. 
+```{r}
+msleep %>% 
+  group_by(order) %>% 
+  summarize(mean_brainwt = mean(brainwt, na.rm=T))
+#For Cetacea, the mean returns as NaN (not a number), which presumably means that all values are NA and all of them got removed so the mean is 0/0 which is not a number
+```
+
+##lab7_2
+
+### Learning Goals
+*At the end of this exercise, you will be able to:*    
+1. Produce clear, concise summaries using a variety of functions in `dplyr` and `janitor.`  
+2. Use the `across()` operator to produce summaries across multiple variables.  
+
+### Review
+The summarize() and group_by() functions are powerful tools that we can use to produce clean summaries of data. Especially when used together, we can quickly group variables of interest and save time. Let's do some practice with the [palmerpenguins(https://allisonhorst.github.io/palmerpenguins/articles/intro.html) data to refresh our memory.
+```{r}
+glimpse(penguins)
+```
+
+As biologists, a good question that we may ask is how do the measured variables differ by island (on average)?
+```{r}
+penguins %>% 
+  group_by(island) %>% 
+  #summarize(number_NAs=sum(is.na(body_mass_g))) - there's only 1 per
+  summarize(mean(bill_length_mm, na.rm=T),
+            mean(bill_depth_mm, na.rm=T),
+            mean(flipper_length_mm, na.rm=T),
+            mean(body_mass_g, na.rm=T),
+            mean(year, na.rm=T))
+```
+
+Why do we have NA here? Do all of these penguins lack data?
+```{r}
+penguins %>% 
+  group_by(island) %>% 
+  summarize(number_NAs=sum(is.na(body_mass_g)))
+
+```
+
+Well, that won't work so let's remove the NAs and recalculate.
+```{r}
+penguins %>% 
+  group_by(island) %>% 
+  filter(!is.na(body_mass_g)) %>% 
+  summarize(mean(body_mass_g))
+```
+
+What if we are interested in the number of observations (penguins) by species and island?
+```{r}
+penguins %>% 
+  group_by(species, island) %>% 
+  summarize(n=n(), .groups= 'keep')#the .groups argument here just prevents a warning message
+```
+
+### Counts
+Although these summary functions are super helpful, oftentimes we are mostly interested in counts. The [janitor package](https://garthtarr.github.io/meatR/janitor.html) does a lot with counts, but there are also functions that are part of dplyr that are useful.  
+
+`count()` is an easy way of determining how many observations you have within a column. It acts like a combination of `group_by()` and `n()`.
+```{r}
+penguins %>% 
+  count(island, sort = T) #sort=T sorts the column in descending order
+```
+
+Compare this with `summarize()` and `group_by()`.
+```{r}
+penguins %>% 
+  group_by(island) %>% 
+  summarize(n=n())
+```
+
+You can also use `count()` across multiple variables.
+```{r}
+penguins %>% 
+  count(island, species, sort = T) # sort=T will arrange in descending order
+```
+
+For counts, I also like `tabyl()`. Lots of options are supported in [tabyl](https://cran.r-project.org/web/packages/janitor/vignettes/tabyls.html)
+```{r}
+penguins %>% 
+  tabyl(island, species)
+```
+
+### `across()`
+What about using `filter()` and `select()` across multiple variables? There is a function in dplyr called `across()` which is designed to work across multiple variables. Have a look at Rebecca Barter's awesome blog [here](http://www.rebeccabarter.com/blog/2020-07-09-across/).    
+
+What if we wanted to apply `summarize()` in order to produce distinct counts over multiple variables; i.e. species, island, and sex? Although this isn't a lot of coding you can image that with a lot of variables it would be cumbersome.
+```{r}
+penguins %>%
+  summarize(distinct_species = n_distinct(species),
+            distinct_island = n_distinct(island),
+            distinct_sex = n_distinct(sex))
+```
+
+By using `across()` we can reduce the clutter and make things cleaner. 
+```{r}
+penguins %>%
+  summarize(across(c(species, island, sex), n_distinct))
+```
+
+This is very helpful for continuous variables.
+```{r}
+penguins %>%
+  summarize(across(contains("mm"), mean, na.rm=T))
+```
+
+```{r}
+penguins %>%
+  summarize(across(contains("mm"), \(x) mean(x, na.rm = TRUE))) #syntax avoids error
+```
+
+`group_by` also works.
+```{r}
+penguins %>%
+  group_by(sex) %>% 
+  summarize(across(contains("mm"), mean, na.rm=T))
+```
+
+Here we summarize across all variables.
+```{r}
+penguins %>%
+  summarise_all(mean, na.rm=T)
+```
+
+Operators can also work, here I am summarizing across all variables except `species`, `island`, `sex`, and `year`.
+```{r}
+penguins %>%
+  summarise(across(!c(species, island, sex, year), 
+                   mean, na.rm=T))
+```
+
+All variables that include "bill"...all of the other dplyr operators also work.
+```{r}
+penguins %>%
+  summarise(across(starts_with("bill"), mean, na.rm=T))
+```
