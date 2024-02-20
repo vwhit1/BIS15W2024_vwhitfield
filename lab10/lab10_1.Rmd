@@ -173,9 +173,30 @@ homerange %>%
 ## Practice
 1. Filter the `homerange` data to include `mammals` only.
 
+```{r}
+#glimpse(homerange)
+homerange %>% filter(taxon=="mammals")
+```
+
+
 2. Are there more herbivores or carnivores in mammals? Make a bar plot that shows their relative numbers.
 
+```{r}
+homerange %>% 
+  filter(taxon=="mammals") %>% 
+  ggplot(aes(x=trophic.guild)) + 
+  geom_bar()
+```
+
+
 3. Make a bar plot that shows the masses of the top 10 smallest mammals.
+
+```{r}
+homerange %>% 
+  filter(taxon=="mammals") %>% 
+  slice_min(order_by=mean.mass.g, n=10)
+```
+
 
 ## That's it! Let's take a break and then move on to part 2!  
 
