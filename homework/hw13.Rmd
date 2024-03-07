@@ -21,6 +21,7 @@ Make sure to use the formatting conventions of RMarkdown to make your report nea
 ## Libraries
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(naniar)
 library(shiny)
 library(shinydashboard)
 ```
@@ -33,11 +34,137 @@ UC_admit <- read_csv("data/UC_admit.csv")
 
 **1. Use the function(s) of your choice to get an idea of the overall structure of the data frame, including its dimensions, column names, variable classes, etc. As part of this, determine if there are NA's and how they are treated.**  
 
+```{r}
+names(UC_admit) <- c("campus", "year", "category", "ethnicity", "eth_perc", "eth_count")
+```
+
+
+```{r}
+UC_admit$eth_perc <- as.double(sub("%", "", UC_admit$eth_perc))
+UC_admit$eth_perc <- UC_admit$eth_perc/100
+UC_admit$year <- as.integer(UC_admit$year)
+```
+
+```{r}
+glimpse(UC_admit)
+```
+```{r}
+miss_var_summary(UC_admit) #Plus the "Unknown"s
+```
+
+```{r}
+head(UC_admit)
+```
+
+
+```{r}
+UC_admit %>% 
+      filter(year==2019) %>%
+      filter(campus=="Davis") %>% 
+      filter(category=="Applicants") %>% 
+      ggplot(aes(x=ethnicity, y=eth_perc)) + 
+      geom_col(color="black", fill="steelblue")
+```
+
 
 **2. The president of UC has asked you to build a shiny app that shows admissions by ethnicity across all UC campuses. Your app should allow users to explore year, campus, and admit category as interactive variables. Use shiny dashboard and try to incorporate the aesthetics you have learned in ggplot to make the app neat and clean.**  
 
+```{r, eval=F, echo=T}
+ui <- fluidPage(    
+  
+  theme = shinytheme("flatly"),
+  
+  titlePanel("UC Admissions by ethnicity"), # give the page a title
+  
+  # generate a row with a sidebar
+  sidebarLayout(      
+    
+  # define the sidebar with one input
+  sidebarPanel(
+  selectInput("year", "Year:", choices=unique(UC_admit$year)),
+  selectInput("campus", "Campus:", choices=unique(UC_admit$campus)),
+  selectInput("category", "Admit Category:", choices=unique(UC_admit$category)), hr(),
+  helpText("From UC data")),
+    
+  # create a spot for the barplot
+  mainPanel(
+  plotOutput("admitPlot"))
+  )
+  )
+
+  # define a server for the Shiny app
+  server <- function(input, output, session) {
+  
+  # this stops the app upon closing
+  session$onSessionEnded(stopApp)
+  
+  # fill in the spot we created for a plot
+  output$admitPlot <- renderPlot({
+    
+    UC_admit %>% 
+      filter(year == input$year) %>%
+      filter(campus == input$campus) %>%
+      filter(category == input$category) %>%
+      filter(ethnicity!="All") %>% 
+      ggplot(aes(x=ethnicity, y=eth_perc)) + 
+        geom_col(fill="blue4", color="yellow2", size=1.5)+
+        labs(x="Ethnicity", y="Percentage")+
+        scale_y_continuous(labels = scales::percent)+
+        theme(axis.title = element_text(size=15))
+  })
+  }
+
+shinyApp(ui, server)
+```
+
 
 **3. Make alternate version of your app above by tracking enrollment at a campus over all of the represented years while allowing users to interact with campus, category, and ethnicity.**
+
+```{r}
+ui <- fluidPage(    
+  
+  theme = shinytheme("flatly"),
+  
+  titlePanel("UC Admissions by year"), # give the page a title
+  
+  # generate a row with a sidebar
+  sidebarLayout(      
+    
+  # define the sidebar with one input
+  sidebarPanel(
+  selectInput("ethnicity", "Ethnicity:", choices=unique(UC_admit$ethnicity)),
+  selectInput("campus", "Campus:", choices=unique(UC_admit$campus)),
+  selectInput("category", "Admit Category:", choices=unique(UC_admit$category)), hr(),
+  helpText("From UC data")),
+    
+  # create a spot for the barplot
+  mainPanel(
+  plotOutput("admitPlot"))
+  )
+  )
+
+  # define a server for the Shiny app
+  server <- function(input, output, session) {
+  
+  # this stops the app upon closing
+  session$onSessionEnded(stopApp)
+  
+  # fill in the spot we created for a plot
+  output$admitPlot <- renderPlot({
+    
+    UC_admit %>% 
+      filter(ethnicity == input$ethnicity) %>%
+      filter(campus == input$campus) %>%
+      filter(category == input$category) %>%
+      ggplot(aes(x=as.factor(year), y=eth_count)) + 
+        geom_col(fill="blue4", color="yellow2", size=1.5)+
+        labs(x="Year", y="Number of people")+
+        theme(axis.title = element_text(size=15))
+  })
+  }
+
+shinyApp(ui, server)
+```
 
 
 ## Push your final code to GitHub!
